@@ -1,0 +1,893 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "This template creates necessary resources to grant access to Trend Micro Vision One",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Warning: Do not modify the fields below. Modifications will cause your deployment to fail."
+          },
+          "Parameters": [
+            "VisionOneRegion",
+            "VisionOneAccountID",
+            "VisionOneOIDCProviderURL"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Cloud Account Management Parameters."
+          },
+          "Parameters": [
+            "VisionOneAPIKey",
+            "OrganizationID",
+            "CloudAccountName",
+            "CloudAccountDescription",
+            "ServerWorkloadProtectionManager"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "VisionOneRegion": {
+          "default": "VisionOneRegion"
+        },
+        "VisionOneAccountID": {
+          "default": "VisionOneAccountID"
+        },
+        "VisionOneOIDCProviderURL": {
+          "default": "VisionOneOIDCProviderURL"
+        },
+        "VisionOneAPIKey": {
+          "default": "VisionOneAPIKey"
+        },
+        "OrganizationID": {
+          "default": "OrganizationID"
+        },
+        "CloudAccountName": {
+          "default": "CloudAccountName"
+        },
+        "CloudAccountDescription": {
+          "default": "CloudAccountDescription"
+        },
+        "ServerWorkloadProtectionManager": {
+          "default": "ServerWorkloadProtectionManager"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "VisionOneRegion": {
+      "Type": "String",
+      "Description": "The Vision One account region."
+    },
+    "VisionOneAccountID": {
+      "Type": "String",
+      "Description": "The Vision One Account this role will reachable from"
+    },
+    "VisionOneOIDCProviderURL": {
+      "Type": "String",
+      "Description": "The URL that the IAM OIDC provider resource object is associated with."
+    },
+    "VisionOneAPIKey": {
+      "Type": "String",
+      "Description": "The Vision One API key used to invoke Vision One CAM Services.",
+      "Default": "",
+      "NoEcho": "true"
+    },
+    "OrganizationID": {
+      "Type": "String",
+      "Description": "The ID of the AWS Organization root or unit required if you're deploying on an organizational level.",
+      "Default": ""
+    },
+    "CloudAccountName": {
+      "Type": "String",
+      "Description": "The cloud account name present to Vision One.",
+      "Default": ""
+    },
+    "CloudAccountDescription": {
+      "Type": "String",
+      "Description": "The cloud account description present to Vision One.",
+      "Default": ""
+    },
+    "ServerWorkloadProtectionManager": {
+      "Type": "String",
+      "Description": "The Server & Workload Protection Manager associated with the connected account. [The value should be Base64 encoded string]",
+      "Default": ""
+    }
+  },
+  "Resources": {
+    "VisionOnePolicyPart1": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Description": "Vision One Policy Part 1",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "access-analyzer:ListAnalyzers",
+                "access-analyzer:ListFindings",
+                "acm:DescribeCertificate",
+                "acm:ListCertificates",
+                "acm:ListTagsForCertificate",
+                "apigateway:GET",
+                "appflow:DescribeFlow",
+                "appflow:ListFlows",
+                "application-autoscaling:DescribeScalableTargets",
+                "application-autoscaling:DescribeScalingActivities",
+                "application-autoscaling:DescribeScalingPolicies",
+                "application-autoscaling:DescribeScheduledActions",
+                "athena:GetQueryExecution",
+                "athena:ListQueryExecutions",
+                "athena:ListTagsForResource",
+                "autoscaling:DescribeAccountLimits",
+                "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:DescribeAutoScalingInstances",
+                "autoscaling:DescribeLaunchConfigurations",
+                "autoscaling:DescribeLoadBalancerTargetGroups",
+                "autoscaling:DescribeLoadBalancers",
+                "autoscaling:DescribeNotificationConfigurations",
+                "autoscaling:DescribeTags",
+                "backup:DescribeBackupVault",
+                "backup:GetBackupVaultAccessPolicy",
+                "backup:ListBackupVaults",
+                "backup:ListRecoveryPointsByResource",
+                "ce:GetAnomalies",
+                "ce:GetAnomalyMonitors",
+                "cloudformation:DescribeAccountLimits",
+                "cloudformation:DescribeStackDriftDetectionStatus",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResources",
+                "cloudformation:DescribeStacks",
+                "cloudformation:DetectStackDrift",
+                "cloudformation:GetStackPolicy",
+                "cloudformation:GetTemplate",
+                "cloudformation:ListStackInstances",
+                "cloudformation:ListStackResources",
+                "cloudformation:ListStacks",
+                "cloudfront:GetDistribution",
+                "cloudfront:ListDistributions",
+                "cloudfront:ListTagsForResource",
+                "cloudtrail:DescribeTrails",
+                "cloudtrail:GetEventSelectors",
+                "cloudtrail:GetTrailStatus",
+                "cloudtrail:ListTags",
+                "cloudwatch:DescribeAlarms",
+                "cloudwatch:DescribeAlarmsForMetric",
+                "cloudwatch:GetMetricData",
+                "cloudwatch:GetMetricStatistics",
+                "cloudwatch:ListMetrics",
+                "comprehend:ListDocumentClassificationJobs",
+                "comprehend:ListDominantLanguageDetectionJobs",
+                "comprehend:ListEntitiesDetectionJobs",
+                "comprehend:ListKeyPhrasesDetectionJobs",
+                "comprehend:ListSentimentDetectionJobs",
+                "comprehend:ListTopicsDetectionJobs",
+                "compute-optimizer:GetAutoScalingGroupRecommendations",
+                "compute-optimizer:GetEC2InstanceRecommendations",
+                "config:DescribeComplianceByConfigRule",
+                "config:DescribeConfigRules",
+                "config:DescribeConfigurationRecorderStatus",
+                "config:DescribeConfigurationRecorders",
+                "config:DescribeDeliveryChannelStatus",
+                "config:DescribeDeliveryChannels",
+                "config:GetComplianceDetailsByConfigRule",
+                "config:GetResourceConfigHistory",
+                "config:SelectResourceConfig",
+                "dax:DescribeClusters",
+                "dax:ListTags",
+                "dms:DescribeReplicationInstances",
+                "dms:ListTagsForResource",
+                "ds:DescribeDirectories",
+                "ds:ListTagsForResource",
+                "dynamodb:DescribeContinuousBackups",
+                "dynamodb:DescribeLimits",
+                "dynamodb:DescribeTable",
+                "dynamodb:ListBackups",
+                "dynamodb:ListTables",
+                "dynamodb:ListTagsOfResource",
+                "ec2:DescribeAccountAttributes",
+                "ec2:DescribeAddresses",
+                "ec2:DescribeAvailabilityZones",
+                "ec2:DescribeEgressOnlyInternetGateways",
+                "ec2:DescribeFlowLogs",
+                "ec2:DescribeImages",
+                "ec2:DescribeInstanceAttribute",
+                "ec2:DescribeInstanceStatus",
+                "ec2:DescribeInstances",
+                "ec2:DescribeInternetGateways",
+                "ec2:DescribeKeyPairs",
+                "ec2:DescribeManagedPrefixLists",
+                "ec2:DescribeNatGateways",
+                "ec2:DescribeNetworkAcls",
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DescribeRegions",
+                "ec2:DescribeReservedInstances",
+                "ec2:DescribeRouteTables",
+                "ec2:DescribeSecurityGroupReferences",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeSnapshotAttribute",
+                "ec2:DescribeSnapshots",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeTags",
+                "ec2:DescribeTransitGatewayAttachments",
+                "ec2:DescribeTransitGatewayPeeringAttachments",
+                "ec2:DescribeTransitGatewayRouteTables",
+                "ec2:DescribeTransitGateways",
+                "ec2:DescribeVolumes",
+                "ec2:DescribeVpcAttribute",
+                "ec2:DescribeVpcEndpoints",
+                "ec2:DescribeVpcPeeringConnections",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeVpnConnections",
+                "ec2:DescribeVpnGateways",
+                "ec2:GetEbsEncryptionByDefault",
+                "ec2:SearchTransitGatewayRoutes",
+                "ecr:DescribeImages",
+                "ecr:DescribeRepositories",
+                "ecr:GetLifecyclePolicy",
+                "ecr:GetRepositoryPolicy",
+                "ecs:DescribeClusters",
+                "ecs:DescribeContainerInstances",
+                "ecs:DescribeServices",
+                "ecs:DescribeTaskDefinition",
+                "ecs:DescribeTasks",
+                "ecs:ListClusters",
+                "ecs:ListContainerInstances",
+                "ecs:ListServices",
+                "ecs:ListTagsForResource",
+                "ecs:ListTaskDefinitions",
+                "ecs:ListTasks",
+                "eks:DescribeCluster",
+                "eks:ListClusters",
+                "elasticache:DescribeCacheClusters",
+                "elasticache:DescribeReplicationGroups",
+                "elasticache:DescribeReservedCacheNodes",
+                "elasticache:ListTagsForResource",
+                "elasticbeanstalk:DescribeConfigurationSettings",
+                "elasticbeanstalk:DescribeEnvironments",
+                "elasticfilesystem:DescribeFileSystems",
+                "elasticfilesystem:DescribeTags",
+                "elasticloadbalancing:DescribeListeners",
+                "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                "elasticloadbalancing:DescribeLoadBalancerPolicies",
+                "elasticloadbalancing:DescribeLoadBalancers",
+                "elasticloadbalancing:DescribeRules",
+                "elasticloadbalancing:DescribeTags",
+                "elasticloadbalancing:DescribeTargetGroups",
+                "elasticloadbalancing:DescribeTargetHealth",
+                "elasticmapreduce:DescribeCluster",
+                "elasticmapreduce:ListClusters",
+                "elasticmapreduce:ListInstances",
+                "es:DescribeElasticsearchDomain",
+                "es:DescribeElasticsearchDomainConfig",
+                "es:DescribeElasticsearchDomains",
+                "es:DescribeElasticsearchInstanceTypeLimits",
+                "es:DescribeReservedElasticsearchInstanceOfferings",
+                "es:DescribeReservedElasticsearchInstances",
+                "es:ListDomainNames",
+                "es:ListElasticsearchInstanceTypes",
+                "es:ListElasticsearchVersions",
+                "es:ListTags",
+                "events:DescribeEventBus",
+                "events:ListRules",
+                "firehose:DescribeDeliveryStream",
+                "firehose:ListDeliveryStreams",
+                "firehose:ListTagsForDeliveryStream",
+                "glue:GetDataCatalogEncryptionSettings",
+                "glue:GetDatabases",
+                "glue:GetSecurityConfiguration",
+                "glue:GetSecurityConfigurations",
+                "guardduty:GetDetector",
+                "guardduty:GetFindings",
+                "guardduty:ListDetectors",
+                "guardduty:ListFindings",
+                "health:DescribeAffectedEntities",
+                "health:DescribeEventDetails",
+                "health:DescribeEvents",
+                "iam:GenerateCredentialReport",
+                "iam:GetAccessKeyLastUsed",
+                "iam:GetAccountAuthorizationDetails",
+                "iam:GetAccountPasswordPolicy",
+                "iam:GetAccountSummary"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "VisionOnePolicyPart2": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Description": "Vision One Policy Part 2",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "iam:GetCredentialReport",
+                "iam:GetGroup",
+                "iam:GetGroupPolicy",
+                "iam:GetLoginProfile",
+                "iam:GetOpenIDConnectProvider",
+                "iam:GetPolicy",
+                "iam:GetPolicyVersion",
+                "iam:GetRole",
+                "iam:GetRolePolicy",
+                "iam:GetSAMLProvider",
+                "iam:GetServerCertificate",
+                "iam:GetUser",
+                "iam:GetUserPolicy",
+                "iam:ListAccessKeys",
+                "iam:ListAccountAliases",
+                "iam:ListAttachedGroupPolicies",
+                "iam:ListAttachedRolePolicies",
+                "iam:ListAttachedUserPolicies",
+                "iam:ListEntitiesForPolicy",
+                "iam:ListGroupPolicies",
+                "iam:ListGroups",
+                "iam:ListInstanceProfiles",
+                "iam:ListInstanceProfilesForRole",
+                "iam:ListMFADevices",
+                "iam:ListOpenIDConnectProviders",
+                "iam:ListPolicies",
+                "iam:ListPolicyTags",
+                "iam:ListPolicyVersions",
+                "iam:ListRolePolicies",
+                "iam:ListRoleTags",
+                "iam:ListRoles",
+                "iam:ListSAMLProviders",
+                "iam:ListSSHPublicKeys",
+                "iam:ListServerCertificates",
+                "iam:ListUserPolicies",
+                "iam:ListUserTags",
+                "iam:ListUsers",
+                "iam:ListVirtualMFADevices",
+                "inspector:DescribeAssessmentRuns",
+                "inspector:DescribeAssessmentTargets",
+                "inspector:DescribeAssessmentTemplates",
+                "inspector:DescribeExclusions",
+                "inspector:DescribeFindings",
+                "inspector:DescribeResourceGroups",
+                "inspector:ListAssessmentRuns",
+                "inspector:ListAssessmentTargets",
+                "inspector:ListAssessmentTemplates",
+                "inspector:ListExclusions",
+                "inspector:ListFindings",
+                "inspector:PreviewAgents",
+                "kafka:DescribeCluster",
+                "kafka:ListClusters",
+                "kafka:ListNodes",
+                "kinesis:DescribeStream",
+                "kinesis:ListStreams",
+                "kinesis:ListTagsForStream",
+                "kms:DescribeKey",
+                "kms:GetKeyPolicy",
+                "kms:GetKeyRotationStatus",
+                "kms:ListAliases",
+                "kms:ListGrants",
+                "kms:ListKeyPolicies",
+                "kms:ListKeys",
+                "kms:ListResourceTags",
+                "lambda:GetAccountSettings",
+                "lambda:GetFunctionConfiguration",
+                "lambda:GetPolicy",
+                "lambda:ListEventSourceMappings",
+                "lambda:ListFunctionUrlConfigs",
+                "lambda:ListFunctions",
+                "lambda:ListLayers",
+                "lambda:ListTags",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:DescribeMetricFilters",
+                "macie2:DescribeBuckets",
+                "macie2:GetAutomatedDiscoveryConfiguration",
+                "macie2:GetClassificationExportConfiguration",
+                "macie2:GetFindingStatistics",
+                "macie2:GetMacieSession",
+                "macie2:GetResourceProfile",
+                "macie2:ListClassificationJobs",
+                "macie2:ListResourceProfileDetections",
+                "mq:DescribeBroker",
+                "mq:ListBrokers",
+                "organizations:DescribeAccount",
+                "organizations:DescribeCreateAccountStatus",
+                "organizations:DescribeHandshake",
+                "organizations:DescribeOrganization",
+                "organizations:DescribeOrganizationalUnit",
+                "organizations:DescribePolicy",
+                "organizations:ListAWSServiceAccessForOrganization",
+                "organizations:ListAccounts",
+                "organizations:ListAccountsForParent",
+                "organizations:ListChildren",
+                "organizations:ListCreateAccountStatus",
+                "organizations:ListHandshakesForAccount",
+                "organizations:ListHandshakesForOrganization",
+                "organizations:ListOrganizationalUnitsForParent",
+                "organizations:ListParents",
+                "organizations:ListPolicies",
+                "organizations:ListPoliciesForTarget",
+                "organizations:ListRoots",
+                "organizations:ListTargetsForPolicy",
+                "rds:DescribeAccountAttributes",
+                "rds:DescribeDBClusterParameterGroups",
+                "rds:DescribeDBClusterParameters",
+                "rds:DescribeDBClusters",
+                "rds:DescribeDBInstances",
+                "rds:DescribeDBParameterGroups",
+                "rds:DescribeDBParameters",
+                "rds:DescribeDBSecurityGroups",
+                "rds:DescribeDBSnapshotAttributes",
+                "rds:DescribeDBSnapshots",
+                "rds:DescribeEventSubscriptions",
+                "rds:DescribeEvents",
+                "rds:DescribeReservedDBInstances",
+                "rds:ListTagsForResource",
+                "redshift:DescribeClusterParameterGroups",
+                "redshift:DescribeClusterParameters",
+                "redshift:DescribeClusters",
+                "redshift:DescribeLoggingStatus",
+                "redshift:DescribeReservedNodes",
+                "redshift:DescribeTags",
+                "route53:GetDNSSEC",
+                "route53:GetGeoLocation",
+                "route53:ListHostedZones",
+                "route53:ListResourceRecordSets",
+                "route53:ListTagsForResource",
+                "route53domains:GetDomainDetail",
+                "route53domains:ListDomains",
+                "route53domains:ListTagsForDomain",
+                "s3:GetAccelerateConfiguration",
+                "s3:GetAccountPublicAccessBlock",
+                "s3:GetBucketAcl",
+                "s3:GetBucketLocation",
+                "s3:GetBucketLogging",
+                "s3:GetBucketNotification",
+                "s3:GetBucketObjectLockConfiguration",
+                "s3:GetBucketPolicy",
+                "s3:GetBucketPolicyStatus",
+                "s3:GetBucketPublicAccessBlock",
+                "s3:GetBucketTagging",
+                "s3:GetBucketVersioning",
+                "s3:GetBucketWebsite",
+                "s3:GetEncryptionConfiguration",
+                "s3:GetLifecycleConfiguration",
+                "s3:GetObject",
+                "s3:ListAllMyBuckets",
+                "s3:ListBucket",
+                "sagemaker:DescribeNotebookInstance",
+                "sagemaker:ListNotebookInstances",
+                "sagemaker:ListTags",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:ListSecrets",
+                "securityhub:DescribeHub",
+                "securityhub:GetEnabledStandards",
+                "securityhub:GetFindings",
+                "securityhub:GetInsightResults",
+                "securityhub:GetInsights",
+                "securityhub:GetMasterAccount",
+                "securityhub:GetMembers",
+                "securityhub:ListEnabledProductsForImport",
+                "securityhub:ListInvitations",
+                "securityhub:ListMembers",
+                "servicequotas:ListServiceQuotas",
+                "ses:GetIdentityDkimAttributes",
+                "ses:GetIdentityPolicies",
+                "ses:GetIdentityVerificationAttributes",
+                "ses:ListIdentities",
+                "ses:ListIdentityPolicies",
+                "shield:DescribeSubscription",
+                "sns:GetTopicAttributes",
+                "sns:ListSubscriptionsByTopic",
+                "sns:ListTagsForResource",
+                "sns:ListTopics",
+                "sqs:GetQueueAttributes",
+                "sqs:ListQueueTags",
+                "sqs:ListQueues",
+                "ssm:DescribeInstanceInformation",
+                "ssm:DescribeParameters",
+                "ssm:DescribeSessions",
+                "ssm:GetParameter",
+                "ssm:GetParameters",
+                "storagegateway:DescribeNFSFileShares",
+                "storagegateway:DescribeSMBFileShares",
+                "storagegateway:DescribeTapes",
+                "storagegateway:ListFileShares",
+                "storagegateway:ListTagsForResource",
+                "storagegateway:ListTapes",
+                "support:DescribeSeverityLevels",
+                "support:DescribeTrustedAdvisorCheckRefreshStatuses",
+                "support:DescribeTrustedAdvisorCheckResult",
+                "support:DescribeTrustedAdvisorChecks",
+                "support:RefreshTrustedAdvisorCheck",
+                "tag:GetResources",
+                "tag:GetTagKeys",
+                "tag:GetTagValues",
+                "transfer:DescribeServer",
+                "transfer:ListServers",
+                "waf:GetWebACL",
+                "waf:ListWebACLs",
+                "wafv2:ListWebACLs",
+                "wellarchitected:GetWorkload",
+                "wellarchitected:ListWorkloads",
+                "workspaces:DescribeTags",
+                "workspaces:DescribeWorkspaceBundles",
+                "workspaces:DescribeWorkspaceDirectories",
+                "workspaces:DescribeWorkspaces",
+                "workspaces:DescribeWorkspacesConnectionStatus"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "VisionOnePolicyPart3": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Description": "Vision One Policy Part 3",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "xray:GetEncryptionConfig"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "VisionOneRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Fn::Sub": [
+            "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Federated\":\"${visionOneOIDCProvider}\"},\"Action\":[\"sts:AssumeRoleWithWebIdentity\",\"sts:SetSourceIdentity\"],\"Condition\":{\"StringEquals\":{\"${visionOneOIDCProviderURL}:aud\":\"arn:aws:iam::${AWS::AccountId}:root\",\"${visionOneOIDCProviderURL}:sub\":[\"urn:visionone:identity:${visionOneRegion}:${visionOneAccountID}:account/${visionOneAccountID}\"]}}}]}",
+            {
+              "visionOneOIDCProvider": {
+                "Ref": "VisionOneOIDCProvider"
+              },
+              "visionOneOIDCProviderURL": {
+                "Ref": "VisionOneOIDCProviderURL"
+              },
+              "visionOneRegion": {
+                "Ref": "VisionOneRegion"
+              },
+              "visionOneAccountID": {
+                "Ref": "VisionOneAccountID"
+              }
+            }
+          ]
+        },
+        "Description": "This role grants attack surface discovery privileges to Trend Micro Vision One via a federated identity.",
+        "Tags": [
+          {
+            "Key": "VisionOneCloudFormationStackName",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}"
+            }
+          },
+          {
+            "Key": "VisionOneCloudFormationStackRegion",
+            "Value": {
+              "Fn::Sub": "${AWS::Region}"
+            }
+          },
+          {
+            "Key": "VisionOneFeatures",
+            "Value": "base"
+          }
+        ],
+        "ManagedPolicyArns": [
+          {
+            "Ref": "VisionOnePolicyPart1"
+          },
+          {
+            "Ref": "VisionOnePolicyPart2"
+          },
+          {
+            "Ref": "VisionOnePolicyPart3"
+          }
+        ]
+      }
+    },
+    "VisionOneOIDCProvider": {
+      "Type": "AWS::IAM::OIDCProvider",
+      "Properties": {
+        "ClientIdList": [
+          {
+            "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+          }
+        ],
+        "ThumbprintList": [
+          "9e99a48a9960b14926bb7f3b02e22da2b0ab7280",
+          "9565AD13689C2C4B4F018BE31767084D197F2692",
+          "8CF427FD790C3AD166068DE81E57EFBB932272D4",
+          "F21C12F46CDB6B2E16F09F9419CDFF328437B2D7"
+        ],
+        "Url": {
+          "Fn::Join": [
+            "",
+            [
+              "https://",
+              {
+                "Ref": "VisionOneOIDCProviderURL"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "AWSCloudAccountLambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      }
+    },
+    "AWSCloudAccountLambdaExecutionPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "lambda-execution-policy",
+        "Roles": [
+          {
+            "Ref": "AWSCloudAccountLambdaExecutionRole"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": {
+                "Fn::Sub": [
+                  "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${lambda}:log-stream:*",
+                  {
+                    "lambda": {
+                      "Ref": "CloudAccount"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iam:ListAccountAliases"
+              ],
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "CloudAccount": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "index.handler",
+        "Runtime": "python3.12",
+        "Role": {
+          "Fn::GetAtt": [
+            "AWSCloudAccountLambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "MemorySize": 512,
+        "Timeout": 60,
+        "Code": {
+          "ZipFile": "import boto3\nimport cfnresponse\nimport urllib3\nimport json\nimport uuid\nimport base64\nimport logging\n\nlogger = logging.getLogger()\nlogger.setLevel(logging.INFO)\n\nhttp = urllib3.PoolManager()\n\n\ndef handler(event, context):\n    response_data = {}\n    print(\"start cloud account handler\")\n    try:\n        cloud_account_alias = get_iam_account_alias()\n\n        request_type = event.get(\"RequestType\", None)\n        resource_properties = event.get(\"ResourceProperties\", {})\n        v1_account_id: str = resource_properties.get(\"VisionOneAccountID\", \"\")\n        token: str = resource_properties.get(\"VisionOneAPIKey\", \"\")\n        organization_id: str = resource_properties.get(\"OrganizationID\", \"\")\n        x_task_id = str(uuid.uuid4())\n        x_trace_id = str(uuid.uuid4())\n        print(f\"event={event}\")\n        if request_type != \"Delete\" and token:\n            role_arn: str = resource_properties.get(\"VisionOneRole\", \"\")\n            if role_arn == \"\":\n                raise ValueError(\"empty string found for role arn\")\n            endpoint: str = resource_properties.get(\"Endpoint\", \"\")\n            if endpoint == \"\":\n                raise ValueError(\"empty string found for endpoint\")\n            cloud_account_id: str = resource_properties.get(\"CloudAccountId\", \"\")\n            if cloud_account_id == \"\":\n                raise ValueError(\"empty string found for cloud account id\")\n            cloud_account_name: str = resource_properties.get(\"CloudAccountName\", \"\")\n            cloud_account_description: str = resource_properties.get(\"CloudAccountDescription\", \"\")\n            features: list[str] = resource_properties.get(\"VisionOneFeatures\", [])\n            workload_instances_base64: str = resource_properties.get(\"ServerWorkloadProtectionManager\", \"\")\n            feature_aws_regions_string: str = resource_properties.get(\"FeatureAwsRegions\", \"\")\n\n            auth = \"Bearer \" + token\n\n            # describe cloud account\n            print(f\"x-trace-id={x_trace_id}, x-task-id={x_task_id}\")\n            headers = {\n                \"Authorization\": auth,\n                \"x-customer-id\": v1_account_id,\n                \"x-task-id\": x_task_id,\n                \"x-trace-id\": x_trace_id,\n            }\n            r = http.request(\"GET\", f\"{endpoint}/{cloud_account_id}\", headers=headers)\n            r_body = json.loads(r.data.decode(\"utf-8\"))\n            is_bridge_account = (\"id\" in r_body and \"sources\" in r_body and r_body[\"roleArn\"] == \"\")\n            is_account_not_found = (\"error\" in r_body\n                                    and \"code\" in r_body['error']\n                                    and r_body['error']['code'] == \"NotFound\")\n            if is_account_not_found or is_bridge_account:\n                # add aws new cloud account or bridge account\n                print(f\"call addAwsCloudAccount api - isBridgeAccount={is_bridge_account}, isAccountNotFound={is_account_not_found}\")\n                payload = {\n                    \"roleArn\": role_arn,\n                }\n                if features:\n                    feature_details = generate_detailed_feature(features, feature_aws_regions_string)\n                    print(\"feature_details: \", feature_details)\n                    payload.update({\"features\": feature_details})\n\n                if cloud_account_name and organization_id == \"\":\n                    payload.update({\"name\": cloud_account_name})\n                else:\n                    payload.update({\"name\": get_enhanced_cloud_account_name(cloud_account_alias, cloud_account_id, cloud_account_name)})\n\n                if cloud_account_description:\n                    payload.update({\"description\": cloud_account_description})\n\n                if workload_instances_base64:\n                    workload_instances: str = base64.b64decode(workload_instances_base64).decode(\"utf-8\")\n                    payload.update({\"connectedSecurityServices\": json.loads(workload_instances)})\n\n                http_request = \"POST\"\n                http_endpoint = endpoint\n            elif \"id\" in r_body and r_body['id'] == cloud_account_id:\n                # modify aws cloud account\n                print(\"Cloud account found, call modifyAwsCloudAccount api\")\n                payload = {\n                    \"roleArn\": role_arn,\n                }\n                if features:\n                    feature_details = generate_detailed_feature(features, feature_aws_regions_string)\n                    print(\"feature_details: \", feature_details)\n                    payload.update({\"features\": feature_details})\n\n                if cloud_account_name and organization_id == \"\":\n                    payload.update({\"name\": cloud_account_name})\n                else:\n                    payload.update({\"name\": get_enhanced_cloud_account_name(cloud_account_alias, cloud_account_id, cloud_account_name)})\n\n                if cloud_account_description:\n                    payload.update({\"description\": cloud_account_description})\n\n                http_request = \"PATCH\"\n                http_endpoint = f\"{endpoint}/{cloud_account_id}\"\n            else:\n                print(f\"unexpected error when calling describeAwsCloudAccount api status={r.status}, body={r_body}\")\n                raise RuntimeError(f\"Calling describeAwsCloudAccount api encountered error traceID={x_trace_id}\")\n\n            encoded_body = json.dumps(payload)\n            print(f\"request body={encoded_body}\")\n            print(f\"x-trace-id={x_trace_id}, x-task-id={x_task_id}, org_id={organization_id}\")\n            headers = {\n                \"Authorization\": auth,\n                \"x-customer-id\": v1_account_id,\n                \"x-task-id\": x_task_id,\n                \"x-trace-id\": x_trace_id,\n                \"tmv1-organizationID\": organization_id,\n            }\n            r = http.request(http_request, http_endpoint, headers=headers, body=encoded_body)\n            if not ((r.status // 100) == 2):\n                print(\"response status:\", r.status)\n                r_body = json.loads(r.data.decode(\"utf-8\"))\n                print(\"response body:\", r_body)\n                raise RuntimeError(f\"could not call cloud account api. please see the logs attached. traceID={x_trace_id}\")\n            print(f\"Calling cloud account api success status={r.status}, arn={role_arn}\")\n        else:\n            print(\"Either API Key was not provided, or request type is not supported, nothing to do!\")\n\n        cfnresponse.send(\n            event,\n            context,\n            cfnresponse.SUCCESS,\n            response_data,\n            \"CustomResourcePhysicalID\",\n        )\n    except Exception as e:\n        response_data[\"Error\"] = str(e)\n        cfnresponse.send(event, context, cfnresponse.FAILED, response_data, \"\", reason=str(e))\n\n\ndef generate_detailed_feature(features, feature_aws_regions_string):\n    # convert features and featureAwsRegions into a new featureDetails object\n    if feature_aws_regions_string == \"\":\n        return features\n    feature_details = []\n    existing_features = []\n    if \"|\" in feature_aws_regions_string or \":\" in feature_aws_regions_string:\n        features_and_regions = feature_aws_regions_string.split(\"|\")\n        for curr in features_and_regions:\n            feature_region_parts = curr.split(\":\")\n            feature = feature_region_parts[0]\n            regions = list(set(feature_region_parts[1].split(\",\")))\n            feature_details.append({\n                \"id\": feature,\n                \"regions\": regions,\n            })\n            existing_features.append(feature)\n    for feature in features:\n        if feature not in existing_features:\n            feature_details.append({\n                \"id\": feature\n            })\n            existing_features.append(feature)\n    return feature_details\n\n\ndef get_iam_account_alias():\n    iam_client = boto3.client('iam')\n    response = iam_client.list_account_aliases()\n    if \"AccountAliases\" in response and len(response[\"AccountAliases\"]) > 0:\n        return response[\"AccountAliases\"][0]\n    else:\n        return None\n\n\ndef get_enhanced_cloud_account_name(cloud_account_alias, cloud_account_id, cloud_account_name):\n    if cloud_account_alias:\n        return cloud_account_alias\n    elif cloud_account_name is None or cloud_account_name == \"\":\n        return cloud_account_id\n    else:\n        return cloud_account_name + \"-\" + cloud_account_id\n"
+        }
+      }
+    },
+    "CloudAccountLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": [
+            "/aws/lambda/${lambda}",
+            {
+              "lambda": {
+                "Ref": "CloudAccount"
+              }
+            }
+          ]
+        },
+        "RetentionInDays": 14
+      }
+    },
+    "customCloudAccount": {
+      "Type": "Custom::CloudAccount",
+      "DependsOn": [
+        "AWSCloudAccountLambdaExecutionPolicy"
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CloudAccount",
+            "Arn"
+          ]
+        },
+        "VisionOneAPIKey": {
+          "Ref": "VisionOneAPIKey"
+        },
+        "OrganizationID": {
+          "Ref": "OrganizationID"
+        },
+        "VisionOneAccountID": {
+          "Ref": "VisionOneAccountID"
+        },
+        "VisionOneRole": {
+          "Fn::GetAtt": [
+            "VisionOneRole",
+            "Arn"
+          ]
+        },
+        "VisionOneFeatures": [],
+        "FeatureAwsRegions": "",
+        "Endpoint": "https://api.sg.xdr.trendmicro.com/beta/xdr/cam/awsAccounts",
+        "CloudAccountId": {
+          "Fn::Sub": "${AWS::AccountId}"
+        },
+        "CloudAccountName": {
+          "Ref": "CloudAccountName"
+        },
+        "CloudAccountDescription": {
+          "Ref": "CloudAccountDescription"
+        },
+        "ServerWorkloadProtectionManager": {
+          "Ref": "ServerWorkloadProtectionManager"
+        }
+      }
+    },
+    "GetTemplateTypeLambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      }
+    },
+    "GetTemplateTypeLambdaExecutionPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "lambda-execution-policy",
+        "Roles": [
+          {
+            "Ref": "GetTemplateTypeLambdaExecutionRole"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": {
+                "Fn::Sub": [
+                  "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${lambda}:log-stream:*",
+                  {
+                    "lambda": {
+                      "Ref": "GetTemplateType"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "GetTemplateType": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "index.handler",
+        "Runtime": "python3.12",
+        "Role": {
+          "Fn::GetAtt": [
+            "GetTemplateTypeLambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "MemorySize": 512,
+        "Timeout": 60,
+        "Code": {
+          "ZipFile": "import cfnresponse\n\nTEMPLATE_TYPE_DEFAULT = \"account\"\nTEMPLATE_TYPE_FIELD_NAME = \"TemplateType\"\n\n\ndef handler(event, context):\n    response_data = {TEMPLATE_TYPE_FIELD_NAME: TEMPLATE_TYPE_DEFAULT}\n    print(\"start get template type handler\")\n    try:\n        request_type = event.get(\"RequestType\", None)\n        resource_properties = event.get(\"ResourceProperties\", {})\n        organization_id: str = resource_properties.get(\"OrganizationID\", \"\")\n        print(f\"event={event}\")\n        if request_type == \"Create\":\n            if organization_id != \"\":\n                response_data[TEMPLATE_TYPE_FIELD_NAME] = \"organization\"\n        else:\n            print(\"request type is not supported, nothing to do!\")\n        cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data, \"CustomResourcePhysicalID\")\n    except Exception as e:\n        response_data[\"Error\"] = str(e)\n        cfnresponse.send(event, context, cfnresponse.FAILED, response_data, \"\", reason=str(e))\n"
+        }
+      }
+    },
+    "GetTemplateTypeLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": [
+            "/aws/lambda/${lambda}",
+            {
+              "lambda": {
+                "Ref": "GetTemplateType"
+              }
+            }
+          ]
+        },
+        "RetentionInDays": 14
+      }
+    },
+    "customGetTemplateType": {
+      "Type": "Custom::GetTemplateType",
+      "DependsOn": [
+        "GetTemplateTypeLambdaExecutionPolicy"
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "GetTemplateType",
+            "Arn"
+          ]
+        },
+        "OrganizationID": {
+          "Ref": "OrganizationID"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "VisionOneRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "VisionOneRole",
+          "Arn"
+        ]
+      }
+    },
+    "Version": {
+      "Value": "2024-03-28-554f0ecd92bc"
+    },
+    "TemplateType": {
+      "Value": {
+        "Fn::GetAtt": [
+          "customGetTemplateType",
+          "TemplateType"
+        ]
+      }
+    }
+  }
+}
