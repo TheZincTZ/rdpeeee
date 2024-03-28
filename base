@@ -1,0 +1,431 @@
+Description:  This template deploys a VPC, with a pair of public and private subnets spread
+  across two Availability Zones. It deploys an internet gateway, with a default
+  route on the public subnets. It deploys a pair of NAT gateways (one in each AZ),
+  and default routes for them in the private subnets.
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: voltex-vpc-2
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/16
+
+  PublicSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.10.0/24
+
+  PublicSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
+    Type: String
+    Default: 10.0.11.0/24
+
+  PrivateSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.20.0/24
+
+  PrivateSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+    Type: String
+    Default: 10.0.21.0/24 
+
+  LinuxContainerInstanceType:  
+    Type: String  
+    Default: t3.xlarge  
+    AllowedValues:  
+      - t2.micro  
+      - t2.small  
+      - t2.medium  
+      - t3.micro  
+      - t3.small  
+      - t3.medium  
+      - t3.xlarge
+    Description: The instance type for the Linux container.  
+
+  LinuxContainerImageId:  
+    Type: String  
+    Default: ami-009e7e7df78d6e07b # Update this default value as required  
+    Description: The AMI ID for the Linux container. 
+  
+  WindowsJumpHostInstanceType:  
+    Type: String  
+    Default: t2.small  
+    AllowedValues:  
+      - t2.micro  
+      - t2.small  
+      - t2.medium  
+      - t3.micro  
+      - t3.small  
+      - t3.medium  
+    Description: The instance type for the Windows jump host.  
+
+  WindowsJumpHostImageId:  
+    Type: String  
+    Default: ami-089305cf5d9b2fd05 # Update this default value as required  
+    Description: The AMI ID for the Windows jump host. 
+  
+  WindowsVictimHostInstanceType:  
+    Type: String  
+    Default: t2.small  
+    AllowedValues:  
+      - t2.micro  
+      - t2.small  
+      - t2.medium  
+      - t3.micro  
+      - t3.small  
+      - t3.medium  
+    Description: The instance type for the Windows victim host.  
+
+  WindowsVictimHostImageId:  
+    Type: String  
+    Default: ami-047f77c33d2ac1595 # Update this default value as required  
+    Description: The AMI ID for the Windows victim host.    
+
+  
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs  '' ]
+      CidrBlock: !Ref PublicSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs  '' ]
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs  '' ]
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Routes
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Routes (AZ1)
+
+  DefaultPrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
+
+  NoIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "no-ingress-sg"
+      GroupDescription: "Security group with no ingress rule"
+      VpcId: !Ref VPC
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Allow web traffic to ALB
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 165.21.98.190/32
+        - IpProtocol: tcp
+          FromPort: 1230
+          ToPort: 1240
+          CidrIp: 165.21.98.190/32
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 165.21.98.190/32
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          CidrIp: 165.21.98.190/32
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 203.117.144.82/32
+        - IpProtocol: tcp
+          FromPort: 1230
+          ToPort: 1240
+          CidrIp: 203.117.144.82/32
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 203.117.144.82/32
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.0.0/16
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          CidrIp: 203.117.144.82/32
+        - IpProtocol: tcp
+          FromPort: 23
+          ToPort: 23
+          CidrIp: 10.0.10.103/32
+        - IpProtocol: tcp
+          FromPort: 23
+          ToPort: 23
+          CidrIp: 54.179.135.176/32
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 10.0.0.0/16
+        - IpProtocol: tcp
+          FromPort: 8443
+          ToPort: 8443
+          CidrIp: 10.0.0.0/16
+        - IpProtocol: tcp
+          FromPort: 8070
+          ToPort: 8070
+          CidrIp: 10.0.0.0/16
+
+  RDPSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Allow RDP to Jump Host
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: 203.117.144.82/32
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: 165.21.98.190/32  
+        - IpProtocol: tcp
+          FromPort: 23
+          ToPort: 23
+          CidrIp: 203.117.144.82/32
+        - IpProtocol: tcp
+          FromPort: 23
+          ToPort: 23
+          CidrIp: 165.21.98.190/32
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: 10.0.0.0/16
+
+  NewKeyPair:
+      Type: 'AWS::EC2::KeyPair'
+      Properties:
+        KeyName: sea-prod-base-infra 
+        
+  LinuxContainer:  
+    Type: 'AWS::EC2::Instance'  
+    Properties:  
+      ImageId: !Ref LinuxContainerImageId  
+      InstanceType: !Ref LinuxContainerInstanceType  
+      KeyName: sea-prod-base-infra  
+      SubnetId: !Ref PrivateSubnet1  
+      SecurityGroupIds:  
+        - !Ref ALBSecurityGroup  
+      BlockDeviceMappings:  
+        - DeviceName: /dev/xvda  
+          Ebs:  
+            VolumeSize: 200 # Size in GB  
+            DeleteOnTermination: true   
+            VolumeType: gp3  
+      UserData:  
+        Fn::Base64: !Sub |  
+          #!/bin/bash  
+          # Create user john and set password  
+          useradd john  
+          echo john:Pa$$w0rd | chpasswd  
+    
+          # Enable password authentication for SSH  
+          sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config  
+          sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config  
+          systemctl restart sshd  
+      Tags:  
+        - Key: Name  
+          Value: insecure-container 
+  
+  WindowsJumpHost:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !Ref WindowsJumpHostImageId
+      InstanceType: !Ref WindowsJumpHostInstanceType
+      KeyName: sea-prod-base-infra
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds:
+        - !Ref RDPSecurityGroup
+      UserData:
+        Fn::Base64: |
+          <powershell>
+          # Add your Windows-specific configuration here
+          </powershell>
+      Tags:
+        - Key: Name
+          Value: windows-ec2-instance
+
+  WindowsVictimHost:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !Ref WindowsVictimHostImageId
+      InstanceType: !Ref WindowsVictimHostInstanceType
+      KeyName: sea-prod-base-infra
+      SubnetId: !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref RDPSecurityGroup
+      UserData:
+        Fn::Base64: |
+          <powershell>
+          # Add your Windows-specific configuration here
+          </powershell>
+      Tags:
+        - Key: Name
+          Value: windows-ec2-instance
+
+  S3BucketForFSS:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: s3-bucket-for-fss-2
+
+Outputs:
+  VPC:
+    Description: A reference to the created VPC
+    Value: !Ref VPC
+
+  PublicSubnets:
+    Description: A list of the public subnets
+    Value: !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2 ]]
+
+  PrivateSubnets:
+    Description: A list of the private subnets
+    Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
+
+  PublicSubnet1:
+    Description: A reference to the public subnet in the 1st Availability Zone
+    Value: !Ref PublicSubnet1
+
+  PublicSubnet2:
+    Description: A reference to the public subnet in the 2nd Availability Zone
+    Value: !Ref PublicSubnet2
+
+  PrivateSubnet1:
+    Description: A reference to the private subnet in the 1st Availability Zone
+    Value: !Ref PrivateSubnet1
+
+  PrivateSubnet2:
+    Description: A reference to the private subnet in the 2nd Availability Zone
+    Value: !Ref PrivateSubnet2
+
+  NoIngressSecurityGroup:
+    Description: Security group with no ingress rule
+    Value: !Ref NoIngressSecurityGroup
